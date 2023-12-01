@@ -1,7 +1,7 @@
 import { Component, EnvironmentInjector, inject } from '@angular/core';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonToggle, IonItem } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { triangle, ellipse, square } from 'ionicons/icons';
+import { triangle, ellipse, square, images, contrastOutline, camera } from 'ionicons/icons';
 import { Preferences } from '@capacitor/preferences';
 
 
@@ -10,34 +10,47 @@ import { Preferences } from '@capacitor/preferences';
   templateUrl: 'tabs.page.html',
   styleUrls: ['tabs.page.scss'],
   standalone: true,
-  imports: [IonTabs, IonTabBar, IonTabButton, IonToggle, IonIcon, IonLabel, IonItem],
+  imports: [
+    IonTabs, 
+    IonTabBar, 
+    IonTabButton, 
+    IonToggle, 
+    IonIcon, 
+    IonLabel, 
+    IonItem,
+  ],
 })
 export class TabsPage {
   public environmentInjector = inject(EnvironmentInjector);
   darkMode = true;
 
   constructor() {
-    addIcons({ triangle, ellipse, square });
+    addIcons({ triangle, ellipse, square, images, contrastOutline, camera });
     this.checkDarkMode();
   }
 
   async checkDarkMode() {
     const checkIsDarkMode = await Preferences.get({key: 'darkModeActivated'});
-    console.log(checkIsDarkMode);
-    checkIsDarkMode?.value == 'true'
-      ? (this.darkMode = true)
-      : (this.darkMode = false);
-    document.body.classList.toggle('dark', this.darkMode);
+  
+    if (checkIsDarkMode?.value === "true") {
+      this.darkMode = true;
+      document.body.classList.toggle("dark", this.darkMode)
+    } else if (checkIsDarkMode?.value === "false") {
+      this.darkMode = false;
+      document.body.classList.toggle("dark", this.darkMode);
+    }
   }
 
   toggleDarkMode() {
     this.darkMode = !this.darkMode;
     document.body.classList.toggle("dark", this.darkMode)
 
-    if (this.darkMode === true) {
-      localStorage.setItem("darkModeActive", "true");
+   if (this.darkMode === true) {
+      Preferences.set({key:"darkModeActivated", value: "true"})
+      //localStorage.setItem("darkModeActive", "true");
     } else {
-      localStorage.setItem("darkModeActive", "false");
+      Preferences.set({key:"darkModeActivated", value: "false"})
+      //localStorage.setItem("darkModeActive", "false");
     }
   }
 }
