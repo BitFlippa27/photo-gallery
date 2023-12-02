@@ -103,5 +103,18 @@ export class PhotoService {
         photo.webviewPath = `data:image/jpeg;base64,${readFile.data}`;
       }
     }
+
+    console.log(this.photos);
+  }
+  async deletePicture(photo: UserPhoto, position: number) {
+      this.photos.splice(position, 1);
+     // Update photos array cache by overwriting the existing photo array
+      Preferences.set({
+        key: this.PHOTO_STORAGE,
+        value: JSON.stringify(this.photos)
+      });
+
+      const filename = photo.filepath
+      .substring(photo.filepath.lastIndexOf('/') + 1);
   }
 }
