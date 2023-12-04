@@ -33,19 +33,14 @@ import { PhotoService } from '../services/photo.service';
 
 export class Tab1Page {
   photoService: PhotoService = inject(PhotoService);
-  capturedPhoto: UserPhoto | undefined;
+  capturedPicture: UserPhoto | undefined;
   
 
   constructor() {
     addIcons({ camera })
   }
 
-  addPhotoToGallery() {
-    this.photoService.addNewToGallery();
-    this.setRecentPhoto();
-  }
-
-  setRecentPhoto() {
-    this.capturedPhoto = this.photoService.capturedPhoto;
+  takePicture() {
+    this.photoService.takePicture();
   }
 }

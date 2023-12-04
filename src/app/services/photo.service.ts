@@ -12,7 +12,7 @@ import { UserPhoto } from 'src/user-photo';
 
 export class PhotoService {
   photos: UserPhoto[] = [];
-  capturedPhoto: UserPhoto | undefined;
+  capturedPicture: UserPhoto | undefined;
   private PHOTO_STORAGE: string = "photos";
   private platform: Platform;
 
@@ -21,14 +21,14 @@ export class PhotoService {
     this.platform = platform;
   }
 
-  async addNewToGallery() {
-    const capturedPhoto = await Camera.getPhoto({
+  async takePicture() {
+    const capturedPicture = await Camera.getPhoto({
       resultType: CameraResultType.Uri,
       source: CameraSource.Camera,
       quality: 100
     });
 
-    const savedImage = await this.savePicture(capturedPhoto);
+    const savedImage = await this.savePicture(capturedPicture);
     this.photos.unshift(savedImage);
 
     Preferences.set({
@@ -46,10 +46,11 @@ export class PhotoService {
       data: base64Data,
       directory: Directory.Documents
     });
+    //ios or android
     if (this.platform.is("hybrid")) {
       return {
-        filepath: savedFile.uri,
-        webviewPath: Capacitor.convertFileSrc(savedFile.uri), //Capacitor and Cordova apps are hosted on a local HTTP server so we need an URI 
+        filepath: savedFile.uri, //Capacitor and Cordova apps are hosted on a local HTTP server so we need an URI 
+        webviewPath: Capacitor.convertFileSrc(savedFile.uri), 
       };
     }
 
@@ -71,10 +72,10 @@ export class PhotoService {
     } 
     //Web
     else {
-      const response = await fetch(photo.webPath!);
-      const blob = await response.blob();
-
-      return await this.convertBlobToBase64(blob) as string;
+        const response = await fetch(photo.webPath!); //local HTTP Server
+        const blob = await response.blob();
+        
+        return await this.convertBlobToBase64(blob) as string;
     }
   }
 
@@ -90,21 +91,28 @@ export class PhotoService {
   public async loadSaved() {
     // Retrieve cached photo array data
     const { value } = await Preferences.get({ key: this.PHOTO_STORAGE });
+    console.log("value",value);
     this.photos = (value ? JSON.parse(value) : []) as UserPhoto[];
     //On mobile, we can directly set the source of an image tag - <img src="x" /> 
     ///Web requires reading each image from the Filesystem into base64 format
     if (!this.platform.is("hybrid")) {
       for (let photo of this.photos) {
+        try {
+          console.log("photo.webviePath", photo.webviewPath);
           const readFile = await Filesystem.readFile({
-          path: photo.filepath,
-          directory: Directory.Data,
-        });
-        // Web only: Load the photo as base64 data 
-        photo.webviewPath = `data:image/jpeg;base64,${readFile.data}`;
+            path: photo.filepath,
+            directory: Directory.Documents,
+          });
+          // Web only: Load the photo as base64 data 
+          
+          photo.webviewPath = `data:image/jpeg;base64,${readFile.data}`;
+        } catch (error) {
+          console.log("Error when loading pics", error)
+        }
       }
     }
 
-    console.log(this.photos);
+    console.log("photos", this.photos);
   }
   async deletePicture(photo: UserPhoto, position: number) {
       this.photos.splice(position, 1);
